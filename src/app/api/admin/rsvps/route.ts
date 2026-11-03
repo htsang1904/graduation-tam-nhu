@@ -1,8 +1,11 @@
+import { verifyAdminRequest } from "@/lib/auth-admin";
 import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { RSVPDocument, RSVPStats } from "@/types/rsvp";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const authCheck = await verifyAdminRequest(req);
+  if (!authCheck.isAuthorized) return authCheck.errorResponse!;
   try {
     // 2. Fetch from Firestore via Admin SDK
     const { initFirebaseAdmin } = await import("@/lib/firebase-admin");

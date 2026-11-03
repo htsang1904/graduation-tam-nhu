@@ -1,5 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase-client";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { RSVPDocument, RSVPStats } from "@/types/rsvp";
 import {
@@ -17,6 +20,7 @@ import {
 import Link from "next/link";
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [rsvps, setRsvps] = useState<RSVPDocument[]>([]);
   const [stats, setStats] = useState<RSVPStats>({
@@ -34,7 +38,13 @@ export default function AdminDashboardPage() {
 
   const fetchRsvps = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/rsvps", { cache: "no-store" });
+      const user = auth.currentUser;
+      if (!user) { router.replace("/admin/login"); return; }
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/rsvps", {
+        cache: "no-store",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || "Không thể tải danh sách phản hồi.");
@@ -43,73 +53,47 @@ export default function AdminDashboardPage() {
       setRsvps(data.rsvps);
       setStats(data.stats);
     } catch (error: unknown) {
+      setRsvps([]);
+      setStats({ total: 0, yesCount: 0, noCount: 0, totalAttendees: 0 });
       setErrorMessage(error instanceof Error ? error.message : "Lỗi kết nối máy chủ.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [router]);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { void fetchRsvps(); }, 0);
-    return () => window.clearTimeout(timer);
-  }, [fetchRsvps]);
+    return onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        setRsvps([]);
+        router.replace("/admin/login");
+        return;
+      }
+      void fetchRsvps();
+    });
+  }, [fetchRsvps, router]);
 
-  const handleExportCsv = () => {
-    if (rsvps.length === 0) return;
+  const handleExportCsv = async () => {
     setExporting(true);
-
     try {
-      const sanitizeForCsv = (val: unknown): string => {
-        if (val === undefined || val === null) return '""';
-        let str = String(val);
-        if (/^[=+\-@]/.test(str)) {
-          str = "'" + str;
-        }
-        return `"${str.replace(/"/g, '""')}"`;
-      };
-
-      const rows: string[] = [
-        ["STT", "Họ và tên", "Tham dự", "Số người đi cùng", "Lời nhắn", "Thời gian gửi"]
-          .map(sanitizeForCsv)
-          .join(","),
-      ];
-
-      rsvps.forEach((item, idx) => {
-        const attendance = item.attendance === "yes" ? "Có" : "Không";
-        const dateFormatted = item.createdAt
-          ? new Date(item.createdAt).toLocaleString("vi-VN", {
-              timeZone: "Asia/Ho_Chi_Minh",
-            })
-          : "";
-
-        rows.push(
-          [
-            idx + 1,
-            item.guestName,
-            attendance,
-            item.companions,
-            item.message,
-            dateFormatted,
-          ]
-            .map(sanitizeForCsv)
-            .join(",")
-        );
+      const user = auth.currentUser;
+      if (!user) { router.replace("/admin/login"); return; }
+      const token = await user.getIdToken();
+      const res = await fetch("/api/admin/export", {
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
       });
-
-      const bom = "\uFEFF";
-      const blob = new Blob([bom + rows.join("\r\n")], {
-        type: "text/csv;charset=utf-8;",
-      });
-      const url = URL.createObjectURL(blob);
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Xuất CSV thất bại.");
+      }
+      const url = URL.createObjectURL(await res.blob());
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "danh-sach-rsvp-tam-nhu.csv");
-      document.body.appendChild(link);
+      link.download = "danh-sach-rsvp-tam-nhu.csv";
       link.click();
-      document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : "Xuất file thất bại.");
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : "Xuất CSV thất bại.");
     } finally {
       setExporting(false);
     }
@@ -164,6 +148,10 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={async () => { await signOut(auth); router.replace("/admin/login"); }}
+              className="px-3 py-2 text-sm text-rose-700 rounded-full border border-[#E7DFD4]"
+            >Đăng xuất / Đổi tài khoản</button>
             <button
               onClick={() => { setLoading(true); void fetchRsvps(); }}
               className="p-2.5 rounded-full border border-[#E7DFD4] bg-white text-[#1E3A6D] hover:bg-gray-50 transition-colors"

@@ -8,11 +8,6 @@ export interface AdminAuthResult {
   errorResponse?: NextResponse;
 }
 
-const DEFAULT_ADMIN_IDENTIFIERS = [
-  "zgexpfm0fahaqis89sywvcatn543",
-  "trandactamnhu@gmail.com",
-];
-
 export async function verifyAdminRequest(req: NextRequest): Promise<AdminAuthResult> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -48,19 +43,12 @@ export async function verifyAdminRequest(req: NextRequest): Promise<AdminAuthRes
   }
 
   try {
-    const decodedToken = await auth.verifyIdToken(token);
-    const envAdmins = (process.env.ADMIN_UIDS || "")
-      .split(",")
-      .map((uid) => uid.trim().toLowerCase())
-      .filter(Boolean);
-
-    const allAdmins = [...DEFAULT_ADMIN_IDENTIFIERS, ...envAdmins];
-
-    const userUid = (decodedToken.uid || "").trim().toLowerCase();
-    const userEmail = (decodedToken.email || "").trim().toLowerCase();
-
-    const isMatch = allAdmins.some(
-      (admin) => admin === userUid || (userEmail && admin === userEmail)
+    const decodedToken = await auth.verifyIdToken(token, true);
+    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    const userEmail = decodedToken.email?.trim().toLowerCase();
+    const isMatch = Boolean(
+      adminEmail && userEmail === adminEmail && decodedToken.email_verified === true &&
+      decodedToken.firebase?.sign_in_provider === "google.com"
     );
 
     if (!isMatch) {
