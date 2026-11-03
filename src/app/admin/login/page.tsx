@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithPopup, onAuthStateChanged } from "firebase/auth";
+import { signInWithPopup, onAuthStateChanged, signOut } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase-client";
 import { Lock, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -14,16 +14,38 @@ export default function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let active = true;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Already logged in, redirect to admin dashboard
+      if (!user) {
+        if (active) setCheckingAuth(false);
+        return;
+      }
+      if (active) { setLoading(true); setCheckingAuth(true); }
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch("/api/admin/session", {
+          cache: "no-store",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!active || auth.currentUser?.uid !== user.uid) return;
+        if (!res.ok) {
+          if (res.status === 401 || res.status === 403) await signOut(auth);
+          throw new Error(res.status === 403
+            ? "Gmail này không được phép truy cập trang quản trị. Vui lòng chọn tài khoản khác."
+            : data.error || "Không thể kiểm tra quyền đăng nhập. Vui lòng thử lại.");
+        }
         router.replace("/admin");
-      } else {
-        setCheckingAuth(false);
+      } catch (err: unknown) {
+        if (active) {
+          setError(err instanceof Error ? err.message : "Không thể kiểm tra quyền đăng nhập.");
+          setCheckingAuth(false);
+        }
+      } finally {
+        if (active) setLoading(false);
       }
     });
-
-    return () => unsubscribe();
+    return () => { active = false; unsubscribe(); };
   }, [router]);
 
   const handleGoogleSignIn = async () => {
@@ -38,7 +60,7 @@ export default function AdminLoginPage() {
       }
 
       await signInWithPopup(auth, googleProvider);
-      router.replace("/admin");
+      // The auth listener verifies server authorization before navigation.
     } catch (err: unknown) {
       console.error("Sign-in failed:", err);
       if (err instanceof Error) {

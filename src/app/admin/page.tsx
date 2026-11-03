@@ -21,6 +21,7 @@ import Link from "next/link";
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
   const [loading, setLoading] = useState(true);
   const [rsvps, setRsvps] = useState<RSVPDocument[]>([]);
   const [stats, setStats] = useState<RSVPStats>({
@@ -46,9 +47,17 @@ export default function AdminDashboardPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
+      if (res.status === 401 || res.status === 403) {
+        setAuthorized(false);
+        setAuthorized(false);
+        setRsvps([]);
+        router.replace("/admin/login");
+        return;
+      }
       if (!res.ok) {
         throw new Error(data.error || "Không thể tải danh sách phản hồi.");
       }
+      setAuthorized(true);
       setErrorMessage(null);
       setRsvps(data.rsvps);
       setStats(data.stats);
@@ -64,6 +73,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
       if (!user) {
+        setAuthorized(false);
         setRsvps([]);
         router.replace("/admin/login");
         return;
@@ -113,7 +123,17 @@ export default function AdminDashboardPage() {
     });
   }, [rsvps, searchQuery, statusFilter]);
 
-  if (loading && !rsvps.length && !errorMessage) {
+  if (!authorized && errorMessage) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#F9F3E8] p-6">
+        <p role="alert" className="text-rose-700">{errorMessage}</p>
+        <button onClick={() => { setLoading(true); void fetchRsvps(); }}>Thử lại</button>
+        <Link href="/admin/login">Về trang đăng nhập</Link>
+      </div>
+    );
+  }
+
+  if (!authorized || (loading && !rsvps.length && !errorMessage)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F9F3E8]">
         <div className="text-center space-y-3">
