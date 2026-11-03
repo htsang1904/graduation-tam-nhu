@@ -1,3 +1,4 @@
+import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminRequest } from "@/lib/auth-admin";
 import { initFirebaseAdmin } from "@/lib/firebase-admin";
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
     ];
 
     let index = 1;
-    snapshot.forEach((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
+    snapshot.forEach((doc: QueryDocumentSnapshot) => {
       const data = doc.data();
       const attendance = data.attendance === "yes" ? "Có" : "Không";
       const companions = data.attendance === "yes" ? (data.companions || 0) : 0;
