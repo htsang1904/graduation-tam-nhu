@@ -1,9 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
-import { auth, db } from "@/lib/firebase-client";
 import { RSVPDocument, RSVPStats } from "@/types/rsvp";
 import {
   Users,
@@ -12,7 +9,6 @@ import {
   UserCheck,
   Search,
   Download,
-  LogOut,
   ArrowLeft,
   Loader2,
   AlertTriangle,
@@ -21,8 +17,6 @@ import {
 import Link from "next/link";
 
 export default function AdminDashboardPage() {
-  const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [rsvps, setRsvps] = useState<RSVPDocument[]>([]);
   const [stats, setStats] = useState<RSVPStats>({
@@ -32,155 +26,33 @@ export default function AdminDashboardPage() {
     totalAttendees: 0,
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [unauthorizedUid, setUnauthorizedUid] = useState<string | null>(null);
 
   // Filter & Search states
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "yes" | "no">("all");
   const [exporting, setExporting] = useState(false);
 
-  const fetchRsvps = useCallback(async (user?: User | null) => {
-    setLoading(true);
-    setErrorMessage(null);
-
-    const currentUserObj = user || auth.currentUser;
-    if (!currentUserObj) {
-      setLoading(false);
-      return;
-    }
-
-    const uid = currentUserObj.uid.toLowerCase();
-    const email = (currentUserObj.email || "").toLowerCase();
-    const isAuthorized =
-      uid === "zgexpfm0fahaqis89sywvcatn543" ||
-      email === "trandactamnhu@gmail.com";
-
-    if (!isAuthorized) {
-      setErrorMessage("Bạn không có quyền truy cập trang quản trị này.");
-      setUnauthorizedUid(currentUserObj.uid);
-      setLoading(false);
-      return;
-    }
-
+  const fetchRsvps = useCallback(async () => {
     try {
-      // 1. Direct fetch from Firestore via client SDK
-      const { collection, getDocs, query, orderBy } = await import("firebase/firestore");
-      let snapshot;
-      try {
-        const q = query(collection(db, "rsvps"), orderBy("createdAt", "desc"));
-        snapshot = await getDocs(q);
-      } catch {
-        // Fallback without orderBy if index is still propagating
-        snapshot = await getDocs(collection(db, "rsvps"));
+      const res = await fetch("/api/admin/rsvps", { cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Không thể tải danh sách phản hồi.");
       }
-
-      const items: RSVPDocument[] = [];
-      let yesCount = 0;
-      let noCount = 0;
-      let totalAttendees = 0;
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        const attendance = data.attendance === "yes" ? "yes" : "no";
-        const companions = Number(data.companions) || 0;
-
-        if (attendance === "yes") {
-          yesCount += 1;
-          totalAttendees += 1 + companions;
-        } else {
-          noCount += 1;
-        }
-
-        let createdAtStr = "";
-        if (data.createdAt?.toDate) {
-          createdAtStr = data.createdAt.toDate().toISOString();
-        } else if (data.createdAt instanceof Date) {
-          createdAtStr = data.createdAt.toISOString();
-        } else if (typeof data.createdAt === "string") {
-          createdAtStr = data.createdAt;
-        }
-
-        items.push({
-          id: doc.id,
-          guestName: data.guestName || "",
-          attendance,
-          companions: attendance === "yes" ? companions : 0,
-          message: data.message || "",
-          createdAt: createdAtStr,
-        });
-      });
-
-      // Sort in-memory if needed
-      items.sort((a, b) => {
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return dateB - dateA;
-      });
-
-      setRsvps(items);
-      setStats({
-        total: items.length,
-        yesCount,
-        noCount,
-        totalAttendees,
-      });
-      setUnauthorizedUid(null);
-    } catch (err: unknown) {
-      console.error("Firestore read error:", err);
-      // Fallback to API route if direct read encountered an issue
-      try {
-        const token = await currentUserObj.getIdToken();
-        const res = await fetch("/api/admin/rsvps", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error("Không thể tải danh sách phản hồi từ máy chủ.");
-        }
-
-        const data = await res.json();
-        setRsvps(data.rsvps || []);
-        setStats(
-          data.stats || {
-            total: 0,
-            yesCount: 0,
-            noCount: 0,
-            totalAttendees: 0,
-          }
-        );
-        setUnauthorizedUid(null);
-      } catch (fallbackErr: unknown) {
-        setErrorMessage(
-          fallbackErr instanceof Error
-            ? fallbackErr.message
-            : "Lỗi kết nối cơ sở dữ liệu."
-        );
-      }
+      setErrorMessage(null);
+      setRsvps(data.rsvps);
+      setStats(data.stats);
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : "Lỗi kết nối máy chủ.");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        router.replace("/admin/login");
-        return;
-      }
-
-      setCurrentUser(user);
-      await fetchRsvps(user);
-    });
-
-    return () => unsubscribe();
-  }, [router, fetchRsvps]);
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.replace("/admin/login");
-  };
+    const timer = window.setTimeout(() => { void fetchRsvps(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchRsvps]);
 
   const handleExportCsv = () => {
     if (rsvps.length === 0) return;
@@ -262,7 +134,7 @@ export default function AdminDashboardPage() {
       <div className="min-h-screen flex items-center justify-center bg-[#F9F3E8]">
         <div className="text-center space-y-3">
           <Loader2 className="w-8 h-8 animate-spin text-[#1E3A6D] mx-auto" />
-          <p className="text-sm text-[#657083]">Đang kiểm tra quyền và tải dữ liệu...</p>
+          <p className="text-sm text-[#657083]">Đang tải dữ liệu...</p>
         </div>
       </div>
     );
@@ -286,14 +158,14 @@ export default function AdminDashboardPage() {
                 Quản Trị Khách Mời Tốt Nghiệp
               </h1>
               <p className="text-xs text-[#657083]">
-                Đăng nhập: {currentUser?.email || currentUser?.displayName}
+                Danh sách xác nhận tham dự
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => fetchRsvps(currentUser)}
+              onClick={() => { setLoading(true); void fetchRsvps(); }}
               className="p-2.5 rounded-full border border-[#E7DFD4] bg-white text-[#1E3A6D] hover:bg-gray-50 transition-colors"
               title="Làm mới dữ liệu"
             >
@@ -311,14 +183,7 @@ export default function AdminDashboardPage() {
               )}
               <span>Xuất CSV</span>
             </button>
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full border border-[#E7DFD4] bg-white hover:bg-rose-50 text-rose-600 text-xs font-medium transition-colors"
-              title="Đăng xuất"
-            >
-              <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">Đăng xuất</span>
-            </button>
+
           </div>
         </div>
 
@@ -329,15 +194,7 @@ export default function AdminDashboardPage() {
               <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
               <span>{errorMessage}</span>
             </div>
-            {unauthorizedUid && (
-              <div className="text-xs text-rose-700 bg-white/60 p-2.5 rounded-lg font-mono break-all">
-                Google UID của bạn: <strong>{unauthorizedUid}</strong>
-                <br />
-                <span className="text-gray-600">
-                  Hãy thêm UID này vào biến môi trường <code>ADMIN_UIDS</code> trong file <code>.env.local</code> hoặc cấu hình trên Vercel.
-                </span>
-              </div>
-            )}
+
           </div>
         )}
 

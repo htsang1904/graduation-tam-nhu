@@ -1,3 +1,5 @@
+> **Cấu hình hiện tại:** `/admin` và API danh sách/xuất CSV được mở công khai, không yêu cầu đăng nhập. Bất kỳ ai có đường dẫn đều xem được tên và lời nhắn của khách. Các hướng dẫn Google Sign-In và `ADMIN_UIDS` bên dưới thuộc cấu hình cũ, không còn áp dụng.
+
 # Graduation Invitation Website — Trần Đắc Tâm Như 🎓
 
 > Website thiệp mời lễ tốt nghiệp đại học thanh lịch, tối giản dành riêng cho **Trần Đắc Tâm Như** (Hàn Quốc học — K21, Trường Đại học Khoa học Xã hội và Nhân văn, ĐHQG-HCM).  

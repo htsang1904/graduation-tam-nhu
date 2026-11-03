@@ -1,15 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
+import { NextResponse } from "next/server";
 import { RSVPDocument, RSVPStats } from "@/types/rsvp";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    // 1. Verify admin authorization
-    const { verifyAdminRequest } = await import("@/lib/auth-admin");
-    const authCheck = await verifyAdminRequest(req);
-    if (!authCheck.isAuthorized) {
-      return authCheck.errorResponse!;
-    }
-
     // 2. Fetch from Firestore via Admin SDK
     const { initFirebaseAdmin } = await import("@/lib/firebase-admin");
     const { firestore } = initFirebaseAdmin();
@@ -30,7 +24,7 @@ export async function GET(req: NextRequest) {
     let noCount = 0;
     let totalAttendees = 0;
 
-    snapshot.forEach((doc: any) => {
+    snapshot.forEach((doc: QueryDocumentSnapshot) => {
       const data = doc.data();
       const attendance = data.attendance === "yes" ? "yes" : "no";
       const companions = Number(data.companions) || 0;

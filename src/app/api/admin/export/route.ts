@@ -1,6 +1,5 @@
 import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
-import { NextRequest, NextResponse } from "next/server";
-import { verifyAdminRequest } from "@/lib/auth-admin";
+import { NextResponse } from "next/server";
 import { initFirebaseAdmin } from "@/lib/firebase-admin";
 
 function sanitizeForCsv(value: string | number | undefined): string {
@@ -17,13 +16,7 @@ function sanitizeForCsv(value: string | number | undefined): string {
   return `"${str}"`;
 }
 
-export async function GET(req: NextRequest) {
-  // 1. Verify admin authorization
-  const authCheck = await verifyAdminRequest(req);
-  if (!authCheck.isAuthorized) {
-    return authCheck.errorResponse!;
-  }
-
+export async function GET() {
   // 2. Fetch from Firestore via Admin SDK
   const { firestore } = initFirebaseAdmin();
   if (!firestore) {
