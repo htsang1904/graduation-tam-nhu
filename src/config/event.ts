@@ -30,7 +30,7 @@ export const EVENT_CONFIG: EventConfig = {
   locationAddress: "Khu phố 33, phường Linh Xuân, TP. Thủ Đức, TP.HCM",
   invitationQuote: "Rất mong được đón tiếp bạn tại buổi lễ tốt nghiệp đại học của mình!",
   tagline: "You're Invited!",
-  mapUrl: process.env.NEXT_PUBLIC_EVENT_MAP_URL || "https://maps.google.com/?q=Trường+Đại+học+Khoa+học+Xã+hội+và+Nhân+văn+ĐHQG-HCM+Cơ+sở+Linh+Trung+Thủ+Đức",
+  mapUrl: "https://maps.app.goo.gl/VY1GjxWMWj84u3Ed8",
   calendar: {
     startUtc: "20261110T024500Z",
     endUtc: "20261110T050000Z",
