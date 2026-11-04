@@ -218,7 +218,7 @@ export default function EventInfoSection() {
                   09:45 – 12:00
                 </h4>
                 <p className="text-[12.5px] text-[#26354B]/80 mt-1 leading-relaxed">
-                  Đón tiếp bạn bè, chụp ảnh lưu niệm cùng cử nhân và cử hành nghi thức trao bằng tốt nghiệp.
+                  Đón tiếp bạn bè, chụp ảnh lưu niệm cùng bé Như.
                 </p>
               </div>
             </div>
