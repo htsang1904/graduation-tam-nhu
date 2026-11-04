@@ -203,7 +203,7 @@ export default function EventInfoSection() {
         {/* ========================================================= */}
         {/* RIGHT: TIME & VENUE DETAILS CARDS (Col: 5)               */}
         {/* ========================================================= */}
-        <div className="lg:col-span-5 flex flex-col justify-between gap-3.5">
+        <div className="lg:col-span-5 flex flex-col self-start gap-3.5">
           {/* Card 1: Time Details */}
           <div className="bg-[#FFFDF9] rounded-[20px] border border-[#E7DFD4] p-4 sm:p-5 shadow-[0_2px_12px_rgba(30,58,109,0.02)] hover:border-[#1E3A6D]/30 transition-colors">
             <div className="flex items-start gap-3">
