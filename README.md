@@ -1,4 +1,4 @@
-> Trang `/admin` yêu cầu đăng nhập Google. Cấu hình `ADMIN_EMAIL` trên server thành đúng một email được phép truy cập (ví dụ `your-email@gmail.com`); bỏ trống sẽ chặn tất cả. Không dùng danh sách UID. Bật Google trong Firebase Authentication và thêm domain website vào Authorized domains. API danh sách và xuất CSV đều xác minh token, email đã xác thực và nhà cung cấp Google. Redeploy sau khi đổi biến trên Vercel.
+> Trang `/admin` yêu cầu đăng nhập Google. Cấu hình `ADMIN_EMAIL` trên server thành các email được phép truy cập, cách nhau bằng dấu phẩy (ví dụ `first@gmail.com,second@gmail.com`); bỏ trống sẽ chặn tất cả. Không dùng danh sách UID. Bật Google trong Firebase Authentication và thêm domain website vào Authorized domains. API danh sách và xuất CSV đều xác minh token, email đã xác thực và nhà cung cấp Google. Redeploy sau khi đổi biến trên Vercel.
 
 # Graduation Invitation Website — Trần Đắc Tâm Như 🎓
 
@@ -19,7 +19,7 @@
 - **Chống spam & bot:** Bảo vệ bằng rate limiting và honeypot ẩn.
 
 ### 2. Dành cho chủ tiệc (`/admin`)
-- **Đăng nhập Google an toàn:** Chỉ tài khoản Google có email trùng `ADMIN_EMAIL` mới được xem dữ liệu.
+- **Đăng nhập Google an toàn:** Chỉ tài khoản Google có email nằm trong danh sách `ADMIN_EMAIL` mới được xem dữ liệu.
 - **Thống kê tức thì:** 
   - Tổng số phản hồi
   - Số khách tham dự (Có / Không)
@@ -91,11 +91,11 @@ Mở trình duyệt truy cập: [http://localhost:3000](http://localhost:3000)
    ```
 
 ### 3. Cấu hình email quản trị
-1. Điền đúng một email Google vào biến `ADMIN_EMAIL` trong `.env.local` và trên Vercel.
+1. Điền các email Google cách nhau bằng dấu phẩy vào biến `ADMIN_EMAIL` trong `.env.local` và trên Vercel.
 2. Khởi động lại server hoặc redeploy, rồi đăng nhập tại `/admin/login` bằng email đó.
 3. Ví dụ cấu hình:
    ```dotenv
-   ADMIN_EMAIL=your-email@gmail.com
+   ADMIN_EMAIL=first@gmail.com,second@gmail.com
    ```
 
 ---
@@ -120,6 +120,6 @@ Mở trình duyệt truy cập: [http://localhost:3000](http://localhost:3000)
 - [x] Tích hợp honeypot và rate limit chống bot spam.
 - [x] Không lưu số người đi cùng nếu khách chọn "Không tham dự".
 - [x] Firebase Admin SDK chạy an toàn ở backend, client bị chặn truy cập trực tiếp Firestore.
-- [x] Dashboard `/admin` và API chỉ cho phép email Google đã xác thực trùng `ADMIN_EMAIL` truy cập.
+- [x] Dashboard `/admin` và API chỉ cho phép email Google đã xác thực nằm trong danh sách `ADMIN_EMAIL` truy cập.
 - [x] Thống kê chính xác số lượng khách và tổng người dự kiến.
 - [x] Xuất file CSV UTF-8 có BOM mở không lỗi tiếng Việt trên Microsoft Excel và chống CSV formula injection.

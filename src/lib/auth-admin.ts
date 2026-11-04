@@ -44,10 +44,13 @@ export async function verifyAdminRequest(req: NextRequest): Promise<AdminAuthRes
 
   try {
     const decodedToken = await auth.verifyIdToken(token, true);
-    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    const adminEmails = (process.env.ADMIN_EMAIL || "")
+      .split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean);
     const userEmail = decodedToken.email?.trim().toLowerCase();
     const isMatch = Boolean(
-      adminEmail && userEmail === adminEmail && decodedToken.email_verified === true &&
+      userEmail && adminEmails.includes(userEmail) && decodedToken.email_verified === true &&
       decodedToken.firebase?.sign_in_provider === "google.com"
     );
 
