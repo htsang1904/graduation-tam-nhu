@@ -143,7 +143,7 @@ export default function RsvpForm() {
             <input
               id="guestName"
               type="text"
-              placeholder="Nhập họ và tên của bạn"
+              placeholder="Nhập tên của bạn"
               value={guestName}
               onChange={(e) => {
                 setGuestName(e.target.value);

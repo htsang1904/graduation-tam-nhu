@@ -166,7 +166,7 @@ export default function RSVPForm() {
                       id="guestName"
                       type="text"
                       required
-                      placeholder="Nhập họ và tên của bạn"
+                      placeholder="Nhập tên của bạn"
                       value={guestName}
                       onChange={(e) => setGuestName(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-[12px] bg-[#FFFDF9] border border-[#E7DFD4] text-[#26354B] placeholder:text-[#657083]/60 text-xs sm:text-sm transition-all focus:bg-white"
