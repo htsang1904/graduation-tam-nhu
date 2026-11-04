@@ -1,35 +1,27 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
   GraduationCap,
   Calendar as CalendarIcon,
   Clock,
   MapPin,
-  Check,
   ExternalLink,
   Sparkles,
   Heart,
 } from "lucide-react";
 import Image from "next/image";
 import { INVITATION_DATA } from "@/lib/invitation-data";
-import { downloadCalendarEvent } from "@/lib/calendar";
 
 export default function EventInfoSection() {
-  const [downloaded, setDownloaded] = useState(false);
-
-  const handleDownload = () => {
-    downloadCalendarEvent();
-    setDownloaded(true);
-    setTimeout(() => setDownloaded(false), 3000);
-  };
-
-  // Google Calendar one-click link
-  const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(
-    INVITATION_DATA.calendar.summary
-  )}&dates=${INVITATION_DATA.calendar.startUtc}/${INVITATION_DATA.calendar.endUtc}&details=${encodeURIComponent(
-    INVITATION_DATA.calendar.description
-  )}&location=${encodeURIComponent(INVITATION_DATA.calendar.location)}`;
+  const googleCalendarUrl = `https://calendar.google.com/calendar/render?${new URLSearchParams({
+    action: "TEMPLATE",
+    text: INVITATION_DATA.calendar.summary,
+    dates: `${INVITATION_DATA.calendar.startUtc}/${INVITATION_DATA.calendar.endUtc}`,
+    ctz: INVITATION_DATA.timeZone,
+    details: `${INVITATION_DATA.calendar.description}\n\nBản đồ chỉ đường: ${INVITATION_DATA.mapUrl}`,
+    location: INVITATION_DATA.calendar.location,
+  }).toString()}`;
 
   // November 2026 Calendar Grid Setup
   // Nov 1, 2026 is Sunday. In Monday-start week: 6 empty cells (Mon-Sat), then 1-30.
@@ -132,10 +124,8 @@ export default function EventInfoSection() {
                   return (
                     <div key={day} className="relative flex items-center justify-center">
                       {/* Adorable Focused Day 10 Button */}
-                      <button
-                        type="button"
-                        onClick={handleDownload}
-                        title="10/11/2026: Ngày tốt nghiệp của Tâm Như — Bấm để lưu vào lịch!"
+                      <div
+                        title="10/11/2026: Ngày tốt nghiệp của Tâm Như"
                         className="group relative w-[38px] h-[40px] sm:w-[44px] sm:h-[44px] rounded-[14px] sm:rounded-[16px] bg-gradient-to-b from-[#1E3A6D] to-[#152A52] text-white flex flex-col items-center justify-center shadow-[0_6px_18px_rgba(30,58,109,0.28)] ring-[2.5px] ring-[#D4AF37] ring-offset-2 ring-offset-[#FFFDF9] hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer z-10"
                       >
                         {/* Mini Graduation Cap tilted cutely on the corner */}
@@ -155,7 +145,7 @@ export default function EventInfoSection() {
 
                         {/* Gentle ambient gold glow */}
                         <span className="absolute -inset-0.5 rounded-[16px] bg-[#D4AF37]/25 blur-xs -z-10 group-hover:bg-[#D4AF37]/50 transition-colors" />
-                      </button>
+                      </div>
                     </div>
                   );
                 }
@@ -194,37 +184,19 @@ export default function EventInfoSection() {
               </span>
             </div>
 
-            {/* Action Buttons inside Calendar */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {/* Button: Save .ics file */}
-              <button
-                onClick={handleDownload}
-                className="w-full h-[38px] px-3.5 rounded-full border border-[#1E3A6D] bg-[#1E3A6D] hover:bg-[#172F59] text-white text-[12.5px] font-semibold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer active:scale-98"
-              >
-                {downloaded ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-300" />
-                    <span>Đã lưu vào máy!</span>
-                  </>
-                ) : (
-                  <>
-                    <CalendarIcon className="w-3.5 h-3.5" />
-                    <span>Lưu vào lịch</span>
-                  </>
-                )}
-              </button>
-
-              {/* Button: Google Calendar Direct Link */}
-              <a
-                href={googleCalendarUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full h-[38px] px-3.5 rounded-full border border-[#1E3A6D]/40 bg-[#FFFDF9] hover:bg-[#FAF6EF] hover:border-[#1E3A6D] text-[#1E3A6D] text-[12.5px] font-semibold transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-98"
-              >
-                <ExternalLink className="w-3.5 h-3.5 text-[#1E3A6D]" />
-                <span>Google Calendar</span>
-              </a>
-            </div>
+            <a
+              href={googleCalendarUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full min-h-[42px] px-3.5 py-2 rounded-full border border-[#1E3A6D] bg-[#1E3A6D] hover:bg-[#172F59] text-white text-[12.5px] font-semibold transition-all flex items-center justify-center gap-2 shadow-sm active:scale-98"
+            >
+              <CalendarIcon className="w-4 h-4" />
+              <span>Thêm vào Google Calendar</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+            <p className="mt-2 text-center text-[11px] text-[#657083]">
+              Mở Google Calendar và nhấn Lưu để thêm sự kiện vào lịch của bạn.
+            </p>
           </div>
         </div>
 

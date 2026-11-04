@@ -13,7 +13,7 @@
 - **Giao diện Responsive Mobile-first:** Tối ưu mượt mà trên mọi thiết bị từ điện thoại (375px+) đến màn hình máy tính lớn.
 - **Phong cách hoa xanh vintage:** Tông màu kem ấm (`#F9F3E8`), xanh navy (`#1E3A6D`), hoa cẩm tú cầu xanh nhẹ nhàng.
 - **Thông tin sự kiện rõ ràng:** Ngày, giờ và địa điểm tổ chức kèm địa chỉ chi tiết.
-- **Lưu vào lịch (`.ics`):** Tải file lịch chuẩn UTC+7 tích hợp ngay vào Apple Calendar, Google Calendar, Outlook chỉ với 1 click.
+- **Thêm vào Google Calendar:** Mở sự kiện điền sẵn tên, thời gian Việt Nam, địa điểm và link bản đồ để khách nhấn Lưu vào lịch của mình.
 - **Xem bản đồ:** Mở trực tiếp địa điểm trường trên Google Maps.
 - **Xác nhận tham dự (RSVP):** Điền form nhanh gọn, không cần tạo tài khoản hay cung cấp email/sđt.
 - **Chống spam & bot:** Bảo vệ bằng rate limiting và honeypot ẩn.
@@ -114,7 +114,7 @@ Mở trình duyệt truy cập: [http://localhost:3000](http://localhost:3000)
 
 - [x] Giao diện landing page đúng thiết kế Phương án B: tone kem dịu, hoa cẩm tú cầu xanh, font chữ trang nhã.
 - [x] Responsive mượt mà trên mobile (375px), tablet và desktop.
-- [x] Nút "Lưu vào lịch" tải về file `.ics` đúng múi giờ Việt Nam (`09:45–12:00, 10/11/2026`).
+- [x] Nút "Thêm vào Google Calendar" mở sự kiện đúng giờ Việt Nam (`09:45–12:00, 10/11/2026`), kèm địa điểm và link bản đồ.
 - [x] Nút "Xem bản đồ" mở đúng địa điểm trường ĐH KHXH&NV cơ sở Linh Xuân.
 - [x] Form RSVP validate chặt chẽ (tên 2-80 ký tự, số người đi cùng 0-5, tin nhắn <=500 ký tự).
 - [x] Tích hợp honeypot và rate limit chống bot spam.
